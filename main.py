@@ -15,8 +15,9 @@ distances_table = []
 
 def lookup(package_id):
     for truck in truck_list:
-        for i, package in enumerate(truck.packages):
-            if package_id == package.package_id:
+        if package_id in truck.package_ids:
+            package = hash_table2.search(package_id)
+            if package:
                 print("--------------------- \n      PACKAGE", package.package_id, ":\n---------------------")
                 print("ADDRESS:", package.address)
                 print("DEADLINE:", package.deadline)
@@ -24,9 +25,12 @@ def lookup(package_id):
                 print("ZIP CODE:", package.zip_code)
                 print("WEIGHT:", package.weight)
                 print("DELIVERY STATUS:", package.status)
-                print("DELIVERY TIME:", truck.delivery_times[i].strftime("%I:%M %p"), "\n")
+                truck_index = truck_list.index(truck)
+                delivery_time = truck.delivery_times[truck.package_ids.index(package_id)]
+                print("DELIVERY TIME:", delivery_time.strftime("%I:%M %p"), "\n")
                 return
-    print("Package #", package_id, " doesnt exist\n", sep="")
+    print("Package #", package_id, " doesn't exist\n", sep="")
+
 
 
 def hash_function(package_id):
@@ -118,50 +122,55 @@ hash_table2 = HashTable()
 class Truck:
 
     def __init__(self):
-        self.packages = []
+        self.package_ids = []  # Store package IDs instead of packages
         self.delivery_times = []
 
-    def add_package_by_id2(self, package_id, hash_table):
-        packages = hash_table.search(package_id)
-        if packages:
-            if isinstance(packages, list):
-                self.packages.extend(packages)
-            else:
-                self.packages.append(packages)
-            return True
-        return False
+    def add_package_id(self, package_id):
+        self.package_ids.append(package_id)
+    # def add_package_by_id2(self, package_id, hash_table):
+    #     packages = hash_table.search(package_id)
+    #     if packages:
+    #         if isinstance(packages, list):
+    #             self.packages.extend(packages)
+    #         else:
+    #             self.packages.append(packages)
+    #         return True
+    #     return False
 
     def sort_packages_by_distance(self, wgu_address):
-        sorted_packages = []
-        unsorted_packages = self.packages.copy()
+        sorted_package_ids = []  # New list to store sorted package IDs
+        unsorted_package_ids = self.package_ids.copy()
 
-        def get_distance_from_wgu(package):
+        def get_distance_from_wgu(package_id):
+            package = hash_table2.search(package_id)
             return get_distance(wgu_address, package.address)
 
-        furthest_package = max(unsorted_packages, key=get_distance_from_wgu)
+        furthest_package_id = max(unsorted_package_ids, key=get_distance_from_wgu)
 
-        sorted_packages.append(furthest_package)
-        unsorted_packages.remove(furthest_package)
+        sorted_package_ids.append(furthest_package_id)
+        unsorted_package_ids.remove(furthest_package_id)
 
-        current_address = furthest_package.address
+        current_address = hash_table2.search(furthest_package_id).address
 
-        while unsorted_packages:
-            def get_distance_from_current(package):
+        while unsorted_package_ids:
+            def get_distance_from_current(package_id):
+                package = hash_table2.search(package_id)
                 return get_distance(current_address, package.address)
 
-            nearest_package = min(unsorted_packages, key=get_distance_from_current)
-            sorted_packages.append(nearest_package)
-            unsorted_packages.remove(nearest_package)
-            current_address = nearest_package.address
+            nearest_package_id = min(unsorted_package_ids, key=get_distance_from_current)
+            sorted_package_ids.append(nearest_package_id)
+            unsorted_package_ids.remove(nearest_package_id)
+            current_address = hash_table2.search(nearest_package_id).address
 
-        self.packages = sorted_packages
+        self.package_ids = sorted_package_ids
 
     def generate_delivery_times(self, start_time, wgu_address):
         delivery_times = []
         current_time = start_time
         last_address = wgu_address
 
-        for package in self.packages:
+        for package_id in self.package_ids:
+            package = hash_table2.search(package_id)
             distance = get_distance(last_address, package.address)
             travel_time_seconds = distance / 18 * 3600
             current_time += timedelta(seconds=travel_time_seconds)
@@ -180,7 +189,8 @@ class Truck:
         if self == truck3:
             start_time = truck1.delivery_times[-1]
 
-        for package, delivery_time in zip(self.packages, self.delivery_times):
+        for package_id, delivery_time in zip(self.package_ids, self.delivery_times):
+            package = hash_table2.search(package_id)
             if current_time < start_time:
                 package.delivery_status = "At The Hub"
             elif delivery_time <= current_time:
@@ -240,48 +250,48 @@ truck_list = [truck1, truck2, truck3]
     TRUCK PACKAGE LOADING/SORTING
 """
 
-truck1.add_package_by_id2(1, hash_table2)
-truck1.add_package_by_id2(4, hash_table2)
-truck1.add_package_by_id2(40, hash_table2)
-truck1.add_package_by_id2(13, hash_table2)
-truck1.add_package_by_id2(14, hash_table2)
-truck1.add_package_by_id2(15, hash_table2)
-truck1.add_package_by_id2(19, hash_table2)
-truck1.add_package_by_id2(16, hash_table2)
-truck1.add_package_by_id2(20, hash_table2)
-truck1.add_package_by_id2(21, hash_table2)
-truck1.add_package_by_id2(27, hash_table2)
-truck1.add_package_by_id2(31, hash_table2)
-truck1.add_package_by_id2(35, hash_table2)
-truck1.add_package_by_id2(39, hash_table2)
-truck1.add_package_by_id2(12, hash_table2)
+truck1.add_package_id(1)
+truck1.add_package_id(4)
+truck1.add_package_id(40)
+truck1.add_package_id(13)
+truck1.add_package_id(14)
+truck1.add_package_id(15)
+truck1.add_package_id(19)
+truck1.add_package_id(16)
+truck1.add_package_id(20)
+truck1.add_package_id(21)
+truck1.add_package_id(27)
+truck1.add_package_id(31)
+truck1.add_package_id(35)
+truck1.add_package_id(39)
+truck1.add_package_id(12)
 
-truck2.add_package_by_id2(2, hash_table2)
-truck2.add_package_by_id2(3, hash_table2)
-truck2.add_package_by_id2(5, hash_table2)
-truck2.add_package_by_id2(7, hash_table2)
-truck2.add_package_by_id2(8, hash_table2)
-truck2.add_package_by_id2(10, hash_table2)
-truck2.add_package_by_id2(11, hash_table2)
-truck2.add_package_by_id2(17, hash_table2)
-truck2.add_package_by_id2(18, hash_table2)
-truck2.add_package_by_id2(22, hash_table2)
-truck2.add_package_by_id2(23, hash_table2)
-truck2.add_package_by_id2(24, hash_table2)
-truck2.add_package_by_id2(26, hash_table2)
-truck2.add_package_by_id2(29, hash_table2)
-truck2.add_package_by_id2(36, hash_table2)
-truck2.add_package_by_id2(38, hash_table2)
+truck2.add_package_id(2)
+truck2.add_package_id(3)
+truck2.add_package_id(5)
+truck2.add_package_id(7)
+truck2.add_package_id(8)
+truck2.add_package_id(10)
+truck2.add_package_id(11)
+truck2.add_package_id(17)
+truck2.add_package_id(18)
+truck2.add_package_id(22)
+truck2.add_package_id(23)
+truck2.add_package_id(24)
+truck2.add_package_id(26)
+truck2.add_package_id(29)
+truck2.add_package_id(36)
+truck2.add_package_id(38)
 
-truck3.add_package_by_id2(6, hash_table2)
-truck3.add_package_by_id2(9, hash_table2)
-truck3.add_package_by_id2(25, hash_table2)
-truck3.add_package_by_id2(28, hash_table2)
-truck3.add_package_by_id2(30, hash_table2)
-truck3.add_package_by_id2(32, hash_table2)
-truck3.add_package_by_id2(33, hash_table2)
-truck3.add_package_by_id2(34, hash_table2)
-truck3.add_package_by_id2(37, hash_table2)
+truck3.add_package_id(6)
+truck3.add_package_id(9)
+truck3.add_package_id(25)
+truck3.add_package_id(28)
+truck3.add_package_id(30)
+truck3.add_package_id(32)
+truck3.add_package_id(33)
+truck3.add_package_id(34)
+truck3.add_package_id(37)
 
 truck1.sort_packages_by_distance(wgu_address)
 truck2.sort_packages_by_distance(wgu_address)
@@ -319,24 +329,27 @@ while True:
         print("--------------------- \n      TRUCK 1:\n---------------------")
         truck1.update_delivery_status(user_input_time)
 
-        for package in truck1.packages:
-            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+        for package_id in truck1.package_ids:
+            package = hash_table2.search(package_id)
+            print("Package ", package_id, ": ", package.delivery_status, sep="")
 
         distance1 = truck1.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance1, "miles\n")
         print("--------------------- \n      TRUCK 2:\n---------------------")
         truck2.update_delivery_status(user_input_time)
 
-        for package in truck2.packages:
-            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+        for package_id in truck2.package_ids:
+            package = hash_table2.search(package_id)
+            print("Package ", package_id, ": ", package.delivery_status, sep="")
         distance2 = truck2.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance2, "miles\n")
 
         print("--------------------- \n      TRUCK 3:\n---------------------")
         truck3.update_delivery_status(user_input_time)
 
-        for package in truck3.packages:
-            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+        for package_id in truck3.package_ids:
+            package = hash_table2.search(package_id)
+            print("Package ", package_id, ": ", package.delivery_status, sep="")
 
         distance3 = truck3.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance3, "miles\n")
