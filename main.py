@@ -6,21 +6,35 @@ wgu_address = "4001 S 700 E"
 """
     TABLES
 """
-hash_table = [[], [], [], [], [], [], [], [], [], []]
 distances_table = []
-
 
 """
     FUNCTIONS
 """
 
+
+def lookup(package_id):
+    for truck in truck_list:
+        for i, package in enumerate(truck.packages):
+            if package_id == package.package_id:
+                print("--------------------- \n      PACKAGE", package.package_id, ":\n---------------------")
+                print("ADDRESS:", package.address)
+                print("DEADLINE:", package.deadline)
+                print("CITY:", package.city)
+                print("ZIP CODE:", package.zip_code)
+                print("WEIGHT:", package.weight)
+                print("DELIVERY STATUS:", package.status)
+                print("DELIVERY TIME:", truck.delivery_times[i].strftime("%I:%M %p"), "\n")
+                return
+    print("Package #", package_id, " doesnt exist\n", sep="")
+
+
 def hash_function(package_id):
     return int(package_id) % 10
 
 
-def insert_package(package):
-    index = hash_function(package.package_id)
-    hash_table[index].append(package)
+def insert_package2(package, hash_table):
+    hash_table2.insert(package)
 
 
 def get_row_number(address):
@@ -55,22 +69,67 @@ class Package:
         self.status = status
 
 
-class Truck:
+class HashTable:
+    def __init__(self):
+        self.size = 10
+        self.table = [None] * self.size
 
+    def hash_function(self, key):
+        return key % self.size
+
+    def insert(self, package):
+        index = self.hash_function(package.package_id)
+        if self.table[index] is None:
+            self.table[index] = package
+        else:
+            if not isinstance(self.table[index], list):
+                self.table[index] = [self.table[index]]
+            self.table[index].append(package)
+
+    def search(self, package_id):
+        index = self.hash_function(package_id)
+        value = self.table[index]
+        if isinstance(value, list):
+            for item in value:
+                if item.package_id == package_id:
+                    return item
+            return None
+        elif value is not None:
+            return value if value.package_id == package_id else None
+        else:
+            return None
+
+    def remove(self, package_id):
+        index = self.hash_function(package_id)
+        value = self.table[index]
+        if isinstance(value, list):
+            for item in value:
+                if item.package_id == package_id:
+                    value.remove(item)
+                    return
+        elif value is not None:
+            if value.package_id == package_id:
+                self.table[index] = None
+
+
+hash_table2 = HashTable()
+
+
+class Truck:
 
     def __init__(self):
         self.packages = []
         self.delivery_times = []
 
-    def add_package_by_id(self, package_id):
-        index = hash_function(package_id)
-        for package in hash_table[
-            index]:
-            if package.package_id == package_id:
-                self.packages.append(package)
-                return True
+    def add_package_by_id2(self, package_id, hash_table):
+        packages = hash_table.search(package_id)
+        if packages:
+            if isinstance(packages, list):
+                self.packages.extend(packages)
+            else:
+                self.packages.append(packages)
+            return True
         return False
-
 
     def sort_packages_by_distance(self, wgu_address):
         sorted_packages = []
@@ -161,13 +220,13 @@ with open("distances.csv", "r") as file:
         row_data = [float(value) for value in row]
         distances_table.append(row_data)
 
+# 2
 with open("packages.csv", 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         package_id, address, city, state, zip_code, deadline, weight, status = row
         package = Package(int(package_id), address, city, state, zip_code, deadline, weight, status)
-        insert_package(package)
-
+        insert_package2(package, hash_table2)
 
 """
     CREATION OF TRUCK OBJECTS
@@ -176,52 +235,53 @@ with open("packages.csv", 'r') as file:
 truck1 = Truck()
 truck2 = Truck()
 truck3 = Truck()
-
+truck_list = [truck1, truck2, truck3]
 """
     TRUCK PACKAGE LOADING/SORTING
 """
-truck1.add_package_by_id(1)
-truck1.add_package_by_id(4)
-truck1.add_package_by_id(40)
-truck1.add_package_by_id(13)
-truck1.add_package_by_id(14)
-truck1.add_package_by_id(15)
-truck1.add_package_by_id(19)
-truck1.add_package_by_id(16)
-truck1.add_package_by_id(20)
-truck1.add_package_by_id(21)
-truck1.add_package_by_id(27)
-truck1.add_package_by_id(31)
-truck1.add_package_by_id(35)
-truck1.add_package_by_id(39)
-truck1.add_package_by_id(12)
 
-truck2.add_package_by_id(2)
-truck2.add_package_by_id(3)
-truck2.add_package_by_id(5)
-truck2.add_package_by_id(7)
-truck2.add_package_by_id(8)
-truck2.add_package_by_id(10)
-truck2.add_package_by_id(11)
-truck2.add_package_by_id(17)
-truck2.add_package_by_id(18)
-truck2.add_package_by_id(22)
-truck2.add_package_by_id(23)
-truck2.add_package_by_id(24)
-truck2.add_package_by_id(26)
-truck2.add_package_by_id(29)
-truck2.add_package_by_id(36)
-truck2.add_package_by_id(38)
+truck1.add_package_by_id2(1, hash_table2)
+truck1.add_package_by_id2(4, hash_table2)
+truck1.add_package_by_id2(40, hash_table2)
+truck1.add_package_by_id2(13, hash_table2)
+truck1.add_package_by_id2(14, hash_table2)
+truck1.add_package_by_id2(15, hash_table2)
+truck1.add_package_by_id2(19, hash_table2)
+truck1.add_package_by_id2(16, hash_table2)
+truck1.add_package_by_id2(20, hash_table2)
+truck1.add_package_by_id2(21, hash_table2)
+truck1.add_package_by_id2(27, hash_table2)
+truck1.add_package_by_id2(31, hash_table2)
+truck1.add_package_by_id2(35, hash_table2)
+truck1.add_package_by_id2(39, hash_table2)
+truck1.add_package_by_id2(12, hash_table2)
 
-truck3.add_package_by_id(6)
-truck3.add_package_by_id(9)
-truck3.add_package_by_id(25)
-truck3.add_package_by_id(28)
-truck3.add_package_by_id(30)
-truck3.add_package_by_id(32)
-truck3.add_package_by_id(33)
-truck3.add_package_by_id(34)
-truck3.add_package_by_id(37)
+truck2.add_package_by_id2(2, hash_table2)
+truck2.add_package_by_id2(3, hash_table2)
+truck2.add_package_by_id2(5, hash_table2)
+truck2.add_package_by_id2(7, hash_table2)
+truck2.add_package_by_id2(8, hash_table2)
+truck2.add_package_by_id2(10, hash_table2)
+truck2.add_package_by_id2(11, hash_table2)
+truck2.add_package_by_id2(17, hash_table2)
+truck2.add_package_by_id2(18, hash_table2)
+truck2.add_package_by_id2(22, hash_table2)
+truck2.add_package_by_id2(23, hash_table2)
+truck2.add_package_by_id2(24, hash_table2)
+truck2.add_package_by_id2(26, hash_table2)
+truck2.add_package_by_id2(29, hash_table2)
+truck2.add_package_by_id2(36, hash_table2)
+truck2.add_package_by_id2(38, hash_table2)
+
+truck3.add_package_by_id2(6, hash_table2)
+truck3.add_package_by_id2(9, hash_table2)
+truck3.add_package_by_id2(25, hash_table2)
+truck3.add_package_by_id2(28, hash_table2)
+truck3.add_package_by_id2(30, hash_table2)
+truck3.add_package_by_id2(32, hash_table2)
+truck3.add_package_by_id2(33, hash_table2)
+truck3.add_package_by_id2(34, hash_table2)
+truck3.add_package_by_id2(37, hash_table2)
 
 truck1.sort_packages_by_distance(wgu_address)
 truck2.sort_packages_by_distance(wgu_address)
@@ -237,43 +297,54 @@ truck3.generate_delivery_times(truck1.delivery_times[-1], wgu_address)
 """
     UI
 """
+
 print("*** ROUTING PROGRAM ***")
-
 while True:
-    user_input_time = input("Enter a time (Including AM or PM): ")
+    user_input1 = input(
+        "What would you like to do? Lookup an individual package(1) OR Get status of all packages at a given time(2), or exit(3):")
 
-    try:
-        user_input_time = datetime.strptime(user_input_time, "%I:%M %p")
+    if user_input1 == "1":
+        user_input2 = input("Please enter the package ID number:")
+        result = lookup(int(user_input2))
+    elif user_input1 == "2":
+        while True:
+            user_input_time = input("Enter a time (Including AM or PM): ")
+
+            try:
+                user_input_time = datetime.strptime(user_input_time, "%I:%M %p")
+                break
+            except ValueError:
+                print("Invalid format. Please enter the time in the format Hour:Minute AM/PM")
+
+        print("--------------------- \n      TRUCK 1:\n---------------------")
+        truck1.update_delivery_status(user_input_time)
+
+        for package in truck1.packages:
+            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+
+        distance1 = truck1.calculate_distance(user_input_time)
+        print("\nDistance traveled:", distance1, "miles\n")
+        print("--------------------- \n      TRUCK 2:\n---------------------")
+        truck2.update_delivery_status(user_input_time)
+
+        for package in truck2.packages:
+            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+        distance2 = truck2.calculate_distance(user_input_time)
+        print("\nDistance traveled:", distance2, "miles\n")
+
+        print("--------------------- \n      TRUCK 3:\n---------------------")
+        truck3.update_delivery_status(user_input_time)
+
+        for package in truck3.packages:
+            print("Package ", package.package_id, ": ", package.delivery_status, sep="")
+
+        distance3 = truck3.calculate_distance(user_input_time)
+        print("\nDistance traveled:", distance3, "miles\n")
+
+        print("--------------------- \n TOTAL MILES DRIVEN:\n---------------------")
+        print(distance1 + distance2 + distance3)
+    elif user_input1 == "3":
+        print("Exiting the program.")
         break
-    except ValueError:
-        print("Invalid format. Please enter the time in the format Hour:Minute AM/PM")
-
-print("--------------------- \n      TRUCK 1:\n---------------------")
-truck1.update_delivery_status(user_input_time)
-
-for package in truck1.packages:
-    print("Package ", package.package_id, ": ", package.delivery_status, sep="")
-
-distance1 = truck1.calculate_distance(user_input_time)
-print("\nDistance traveled:", distance1, "miles\n")
-print("--------------------- \n      TRUCK 2:\n---------------------")
-truck2.update_delivery_status(user_input_time)
-
-for package in truck2.packages:
-    print("Package ", package.package_id, ": ", package.delivery_status, sep="")
-distance2 = truck2.calculate_distance(user_input_time)
-print("\nDistance traveled:", distance2, "miles\n")
-
-print("--------------------- \n      TRUCK 3:\n---------------------")
-truck3.update_delivery_status(user_input_time)
-
-for package in truck3.packages:
-    print("Package ", package.package_id, ": ", package.delivery_status, sep="")
-
-distance3 = truck3.calculate_distance(user_input_time)
-print("\nDistance traveled:", distance3, "miles\n")
-
-if user_input_time >= truck3.delivery_times[-1]:
-    print("--------------------- \n END OF DAY REPORT:\n---------------------")
-    print("Miles Driven:", distance1 + distance2 + distance3)
-    print("End of Day:", truck3.delivery_times[-1].strftime("%I:%M %p"))
+    else:
+        print("Please enter a valid option (1, 2, or 3)")
