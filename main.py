@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 wgu_address = "4001 S 700 E"
 
 """
-    TABLES
+    TABLE
 """
 distances_table = []
 
