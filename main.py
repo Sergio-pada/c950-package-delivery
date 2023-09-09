@@ -1,11 +1,19 @@
+"""
+    Sergio Pada
+    Student ID: 001418359
+"""
 import csv
+
+"""
+    PROCESS/FLOW: Comments that use "#"
+"""
+
 from datetime import datetime, timedelta
 
+"""
+    INITIALIZATIONS
+"""
 wgu_address = "4001 S 700 E"
-
-"""
-    TABLE
-"""
 distances_table = []
 
 """
@@ -13,34 +21,64 @@ distances_table = []
 """
 
 
-def lookup(package_id):
+# This lookup function looks up a package by its id and prints the package details. The function also takes in a time and based on that, prints a delivery status
+def lookup(package_id, current_time):
     for truck in truck_list:
         if package_id in truck.package_ids:
+
             package = hash_table2.search(package_id)
             if package:
-                print("--------------------- \n      PACKAGE", package.package_id, ":\n---------------------")
-                print("ADDRESS:", package.address)
-                print("DEADLINE:", package.deadline)
-                print("CITY:", package.city)
-                print("ZIP CODE:", package.zip_code)
-                print("WEIGHT:", package.weight)
-                print("DELIVERY STATUS:", package.status)
-                truck_index = truck_list.index(truck)
+                print("--------------------- \n      Package", package.package_id, ":\n---------------------")
+                print("Address:", package.address)
+                print("Deadline:", package.deadline)
+                print("City:", package.city)
+                print("Zip Code:", package.zip_code)
+                print("Weight:", package.weight)
+
+                print("Delivery Status:", update_delivery_status(package_id, current_time))
+
                 delivery_time = truck.delivery_times[truck.package_ids.index(package_id)]
-                print("DELIVERY TIME:", delivery_time.strftime("%I:%M %p"), "\n")
+                print("Delivery Time:", delivery_time.strftime("%I:%M %p"), "\n")
                 return
     print("Package #", package_id, " doesn't exist\n", sep="")
 
 
+# This function updates the status for a package given a time. This function used in the lookup function as well in order to display the delivery status
+def update_delivery_status(package_id, current_time):
+    truck = next((t for t in truck_list if package_id in t.package_ids), None)
 
+    if truck is None:
+        print("Package not found on any truck.")
+        return
+
+    index = truck.package_ids.index(package_id)
+    delivery_time = truck.delivery_times[index]
+    start_time = truck1.delivery_times[-1] if package_id in truck3.package_ids else datetime.strptime("08:00 AM",
+                                                                                                      "%I:%M %p")
+    if package_id in truck3.package_ids:
+        start_time = truck1.delivery_times[-1]
+    elif package_id in truck2.package_ids:
+        datetime.strptime("09:10 AM", "%I:%M %p")
+    else:
+        datetime.strptime("08:00 AM", "%I:%M %p")
+    package = hash_table2.search(package_id)
+
+    if current_time < start_time:
+        package.delivery_status = "At the Hub"
+    elif current_time < delivery_time:
+        package.delivery_status = "En Route"
+    else:
+        package.delivery_status = "Delivered"
+
+    return package.delivery_status
+
+
+# Simple hash function that returns an int 1-10
 def hash_function(package_id):
     return int(package_id) % 10
 
 
-def insert_package2(package, hash_table):
-    hash_table2.insert(package)
-
-
+# Finds row number that an address is located at within the addresses.csv file
 def get_row_number(address):
     with open("addresses.csv", 'r') as file:
         reader = csv.reader(file)
@@ -49,7 +87,7 @@ def get_row_number(address):
                 return i
     return None
 
-
+# This uses distances_table to find the distance between 2 inputted addresses
 def get_distance(address1, address2):
     row1 = get_row_number(address1)
     row2 = get_row_number(address2)
@@ -61,7 +99,9 @@ def get_distance(address1, address2):
 """
 
 
+# Class for package objects
 class Package:
+    # Constructor
     def __init__(self, package_id, address, city, state, zip_code, deadline, weight, status):
         self.package_id = package_id
         self.address = address
@@ -72,15 +112,18 @@ class Package:
         self.weight = weight
         self.status = status
 
-
+# Class for hash table objects
 class HashTable:
+    # Constructor
     def __init__(self):
         self.size = 10
         self.table = [None] * self.size
 
+    # This hashes a given value
     def hash_function(self, key):
         return key % self.size
 
+    # This inserts a new package into the hash table
     def insert(self, package):
         index = self.hash_function(package.package_id)
         if self.table[index] is None:
@@ -90,6 +133,7 @@ class HashTable:
                 self.table[index] = [self.table[index]]
             self.table[index].append(package)
 
+    # This returns the package with an id that matches the input(if one exists)
     def search(self, package_id):
         index = self.hash_function(package_id)
         value = self.table[index]
@@ -103,54 +147,27 @@ class HashTable:
         else:
             return None
 
-    def remove(self, package_id):
-        index = self.hash_function(package_id)
-        value = self.table[index]
-        if isinstance(value, list):
-            for item in value:
-                if item.package_id == package_id:
-                    value.remove(item)
-                    return
-        elif value is not None:
-            if value.package_id == package_id:
-                self.table[index] = None
 
-
+# Instantiation of HashTable
 hash_table2 = HashTable()
 
-
+# Class for truck objects
 class Truck:
-
+    # Constructor
     def __init__(self):
-        self.package_ids = []  # Store package IDs instead of packages
+        self.package_ids = []
         self.delivery_times = []
 
+    # This adds a package id to the trucks package_ids list
     def add_package_id(self, package_id):
         self.package_ids.append(package_id)
-    # def add_package_by_id2(self, package_id, hash_table):
-    #     packages = hash_table.search(package_id)
-    #     if packages:
-    #         if isinstance(packages, list):
-    #             self.packages.extend(packages)
-    #         else:
-    #             self.packages.append(packages)
-    #         return True
-    #     return False
 
+    # This is the sorting method for the packages(nearest neighbor)
     def sort_packages_by_distance(self, wgu_address):
-        sorted_package_ids = []  # New list to store sorted package IDs
+        sorted_package_ids = []
         unsorted_package_ids = self.package_ids.copy()
 
-        def get_distance_from_wgu(package_id):
-            package = hash_table2.search(package_id)
-            return get_distance(wgu_address, package.address)
-
-        furthest_package_id = max(unsorted_package_ids, key=get_distance_from_wgu)
-
-        sorted_package_ids.append(furthest_package_id)
-        unsorted_package_ids.remove(furthest_package_id)
-
-        current_address = hash_table2.search(furthest_package_id).address
+        current_address = wgu_address
 
         while unsorted_package_ids:
             def get_distance_from_current(package_id):
@@ -163,7 +180,7 @@ class Truck:
             current_address = hash_table2.search(nearest_package_id).address
 
         self.package_ids = sorted_package_ids
-
+    # This method creates a list of delivery times based on the sorted package ids associated address distances.
     def generate_delivery_times(self, start_time, wgu_address):
         delivery_times = []
         current_time = start_time
@@ -184,20 +201,7 @@ class Truck:
 
         self.delivery_times = delivery_times
 
-    def update_delivery_status(self, current_time):
-        start_time = datetime.strptime("08:00 AM", "%I:%M %p")
-        if self == truck3:
-            start_time = truck1.delivery_times[-1]
-
-        for package_id, delivery_time in zip(self.package_ids, self.delivery_times):
-            package = hash_table2.search(package_id)
-            if current_time < start_time:
-                package.delivery_status = "At The Hub"
-            elif delivery_time <= current_time:
-                package.delivery_status = "Delivered"
-            else:
-                package.delivery_status = "En Route"
-
+    # This method calculates the total distance travelled by a given truck
     def calculate_distance(self, time):
         if self is truck3:
             if time < truck1.delivery_times[-1]:
@@ -208,8 +212,18 @@ class Truck:
             else:
                 elapsed_hours = (time - truck1.delivery_times[-1]).seconds / 3600
                 return 18 * elapsed_hours
-        else:
+        elif self is truck1:
             base_time = datetime.strptime("08:00 AM", "%I:%M %p")
+            if time < base_time:
+                return 0
+            elif time > self.delivery_times[-1]:
+                elapsed_hours = (self.delivery_times[-1] - base_time).seconds / 3600
+                return 18 * elapsed_hours
+            else:
+                elapsed_hours = (time - base_time).seconds / 3600
+                return 18 * elapsed_hours
+        else:
+            base_time = datetime.strptime("09:10 AM", "%I:%M %p")
             if time < base_time:
                 return 0
             elif time > self.delivery_times[-1]:
@@ -221,78 +235,80 @@ class Truck:
 
 
 '''''
-    POPULATION OF TABLES/CREATION OF PACKAGE OBJECTS
+    POPULATION OF DISTANCE TABLE/CREATION OF PACKAGE OBJECTS
 '''''
-
+# This takes the data from distances.csv and inserts it into distance_table list
 with open("distances.csv", "r") as file:
     reader = csv.reader(file)
     for row in reader:
         row_data = [float(value) for value in row]
         distances_table.append(row_data)
 
-# 2
+# This creates package objects with data taken from packages.csv
 with open("packages.csv", 'r') as file:
     reader = csv.reader(file)
     for row in reader:
         package_id, address, city, state, zip_code, deadline, weight, status = row
         package = Package(int(package_id), address, city, state, zip_code, deadline, weight, status)
-        insert_package2(package, hash_table2)
+        hash_table2.insert(package)
 
 """
     CREATION OF TRUCK OBJECTS
 """
-
+# Truck instantiations
 truck1 = Truck()
 truck2 = Truck()
 truck3 = Truck()
+# Truck list used so that we can loop through all existing loaded packages.
 truck_list = [truck1, truck2, truck3]
 """
     TRUCK PACKAGE LOADING/SORTING
 """
+# Package objects are loaded onto the trucks
+
 
 truck1.add_package_id(1)
-truck1.add_package_id(4)
-truck1.add_package_id(40)
 truck1.add_package_id(13)
 truck1.add_package_id(14)
 truck1.add_package_id(15)
-truck1.add_package_id(19)
 truck1.add_package_id(16)
+truck1.add_package_id(19)
 truck1.add_package_id(20)
-truck1.add_package_id(21)
-truck1.add_package_id(27)
+truck1.add_package_id(29)
+truck1.add_package_id(30)
 truck1.add_package_id(31)
-truck1.add_package_id(35)
+truck1.add_package_id(34)
+truck1.add_package_id(37)
+truck1.add_package_id(40)
+truck2.add_package_id(38) #Needs to be on truck 2
 truck1.add_package_id(39)
-truck1.add_package_id(12)
-
-truck2.add_package_id(2)
 truck2.add_package_id(3)
-truck2.add_package_id(5)
-truck2.add_package_id(7)
-truck2.add_package_id(8)
-truck2.add_package_id(10)
-truck2.add_package_id(11)
-truck2.add_package_id(17)
+truck3.add_package_id(25) #
+truck2.add_package_id(6) #
 truck2.add_package_id(18)
-truck2.add_package_id(22)
-truck2.add_package_id(23)
-truck2.add_package_id(24)
-truck2.add_package_id(26)
-truck2.add_package_id(29)
+truck2.add_package_id(21)
+truck2.add_package_id(28)#
 truck2.add_package_id(36)
-truck2.add_package_id(38)
-
-truck3.add_package_id(6)
+truck2.add_package_id(2)
+truck2.add_package_id(4)
+truck3.add_package_id(5)
+truck3.add_package_id(7)
+truck3.add_package_id(8)
 truck3.add_package_id(9)
-truck3.add_package_id(25)
-truck3.add_package_id(28)
-truck3.add_package_id(30)
+truck3.add_package_id(10)
+truck3.add_package_id(11)
+truck3.add_package_id(12)
+truck3.add_package_id(17)
+truck3.add_package_id(22)
+truck3.add_package_id(23)
+truck3.add_package_id(24)
+truck3.add_package_id(26)
+truck3.add_package_id(27)
 truck3.add_package_id(32)
 truck3.add_package_id(33)
-truck3.add_package_id(34)
-truck3.add_package_id(37)
+truck3.add_package_id(35)
 
+# Packages are sorted on the trucks
 truck1.sort_packages_by_distance(wgu_address)
 truck2.sort_packages_by_distance(wgu_address)
 truck3.sort_packages_by_distance(wgu_address)
@@ -300,23 +316,39 @@ truck3.sort_packages_by_distance(wgu_address)
 """
     TRUCK DELIVERY TIME GENERATION
 """
+# Delivery times for each package are generated
 truck1.generate_delivery_times(datetime.strptime("8:00 AM", "%I:%M %p"), wgu_address)
-truck2.generate_delivery_times(datetime.strptime("8:00 AM", "%I:%M %p"), wgu_address)
+truck2.generate_delivery_times(datetime.strptime("9:10 AM", "%I:%M %p"), wgu_address)
 truck3.generate_delivery_times(truck1.delivery_times[-1], wgu_address)
+
+
 
 """
     UI
 """
 
 print("*** ROUTING PROGRAM ***")
+# The user picks an option
 while True:
     user_input1 = input(
-        "What would you like to do? Lookup an individual package(1) OR Get status of all packages at a given time(2), or exit(3):")
+        "What would you like to do?\n   (1)Lookup the status of an individual package\n   (2)Get status of all packages at a given time\n   (3)Exit\nEnter a number:")
 
     if user_input1 == "1":
-        user_input2 = input("Please enter the package ID number:")
-        result = lookup(int(user_input2))
+        # If the user wants to view the status of an individual package, then they're prompted to enter a package id and time the package's status is updated and printed to screen.
+        user_input2 = input("Please enter the package ID number: ")
+
+        user_input_time = input("Please enter a time: ")
+        time_format = "%I:%M %p"
+
+        try:
+            input_datetime = datetime.strptime(user_input_time, time_format)
+        except ValueError:
+            print("Invalid time format. Please enter the time in the format HH:MM AM/PM")
+
+        update_delivery_status(int(user_input2), input_datetime)
+        print(hash_table2.search(int(user_input2)).delivery_status)
     elif user_input1 == "2":
+        # If the user wants to view the information on each package, then they are prompted to enter a time. For each package inside each truck, the package's id and the user inputted time are passed into the lookup function which displays each packages info.
         while True:
             user_input_time = input("Enter a time (Including AM or PM): ")
 
@@ -327,29 +359,23 @@ while True:
                 print("Invalid format. Please enter the time in the format Hour:Minute AM/PM")
 
         print("--------------------- \n      TRUCK 1:\n---------------------")
-        truck1.update_delivery_status(user_input_time)
 
         for package_id in truck1.package_ids:
-            package = hash_table2.search(package_id)
-            print("Package ", package_id, ": ", package.delivery_status, sep="")
+            lookup(package_id, user_input_time)
 
         distance1 = truck1.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance1, "miles\n")
         print("--------------------- \n      TRUCK 2:\n---------------------")
-        truck2.update_delivery_status(user_input_time)
 
         for package_id in truck2.package_ids:
-            package = hash_table2.search(package_id)
-            print("Package ", package_id, ": ", package.delivery_status, sep="")
+            lookup(package_id, user_input_time)
         distance2 = truck2.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance2, "miles\n")
 
         print("--------------------- \n      TRUCK 3:\n---------------------")
-        truck3.update_delivery_status(user_input_time)
 
         for package_id in truck3.package_ids:
-            package = hash_table2.search(package_id)
-            print("Package ", package_id, ": ", package.delivery_status, sep="")
+            lookup(package_id, user_input_time)
 
         distance3 = truck3.calculate_distance(user_input_time)
         print("\nDistance traveled:", distance3, "miles\n")
@@ -357,7 +383,9 @@ while True:
         print("--------------------- \n TOTAL MILES DRIVEN:\n---------------------")
         print(distance1 + distance2 + distance3)
     elif user_input1 == "3":
+        # If the user picks "Exit", then the program is terminated
         print("Exiting the program.")
         break
     else:
         print("Please enter a valid option (1, 2, or 3)")
+
