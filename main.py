@@ -1,6 +1,5 @@
 """
     Sergio Pada
-    Student ID: 001418359
 """
 import csv
 
