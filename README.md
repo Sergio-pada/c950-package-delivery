@@ -17,7 +17,7 @@ The Package Delivery System simulates the delivery process of packages using tru
 
 ## Setup
 
-1. Install Python (version X.X or higher).
+1. Install Python.
 2. Clone this repository.
 3. Download the necessary CSV files: `distances.csv`, `packages.csv`, and `addresses.csv`.
 4. Open a terminal or command prompt and navigate to the project directory.
