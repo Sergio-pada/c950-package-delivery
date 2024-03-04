@@ -161,7 +161,7 @@ class Truck:
     def add_package_id(self, package_id):
         self.package_ids.append(package_id)
 
-    # This is the sorting method for the packages(nearest neighbor)
+    # This is the sorting method for the packages(nearest neighbor method)
     def sort_packages_by_distance(self, wgu_address):
         sorted_package_ids = []
         unsorted_package_ids = self.package_ids.copy()
